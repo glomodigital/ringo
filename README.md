@@ -2,6 +2,6 @@
 
 A slackbot for interacting with Spotify in the office for democratising the playback!
 
-![Ringo Starr](/screenshot/ringo_starr.jpg?raw=true "Ringo Starr")
+<img src="/screenshot/ringo_starr.jpg" width="300" alt="Ringo Starr" />
 
 MORE DOCS TO COME
