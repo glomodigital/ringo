@@ -196,6 +196,7 @@ class Spotify(object):
                 - result - a previously returned paged result
         """
         if result['next']:
+            print(self._get(result['next']))
             return self._get(result['next'])
         else:
             return None
@@ -686,7 +687,7 @@ class Spotify(object):
 
             Parameters:
                 - limit - the number of entities to return
-        '''        
+        '''
         return self._get('me/player/recently-played', limit=limit)
 
     def current_user_saved_albums_add(self, albums=[]):
