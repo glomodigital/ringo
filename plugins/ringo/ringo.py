@@ -15,8 +15,6 @@ from config import config
 from rtmbot.core import Plugin
 
 config.set_environ_variables()
-song_uri = "spotify:track:0t8zIi7cwdADvWmkIWE1sp"
-
 
 # ===============
 # OAuth not working
@@ -56,7 +54,7 @@ class RingoPlugin(Plugin):
             ('shuffle', self.command_current_shuffle),
             ('unshuffle', self.command_current_unshuffle),
             ('queue', self.command_queue),
-            ('.+', self.command_unknown)
+            # ('.+', self.command_unknown)
         ]
 
         #=================
@@ -151,7 +149,7 @@ Alternatively type `help` to see the help menu.
     # Assistance controls
     #=================
     # HELP
-    def command_help(self, data):
+    def command_help(self, data, user):
         self.append_channel_output("""
 Hey It's me :microphone: *Ringo* :guitar:! I'm here to help you with the _rock & roll_ in the office :the_horns:.
 
@@ -353,11 +351,17 @@ Spotify URI: {uri}
         if self.is_dev:
             print(data)
 
+    def process_group_joined(self, data):
+        self.command_help(data, None)
+
     def process_channel_joined(self, data):
-        pprint.pprint(data)
+        self.command_help(data, None)
 
     def process_channel_left(self, data):
-        pprint.pprint(data)
+        self.append_channel_output('*:open_mouth: I\'ve kicked me from the <#{}> group*. You cannot control Spotify playback from this channel now :sob:'.format(data['cahnnel']))
+
+    def process_group_left(self, data):
+        self.append_channel_output('*:open_mouth: I\'ve kicked me from the <#{}> group*. You cannot control Spotify playback from this channel now :sob:'.format(data['cahnnel']))
 
     def process_message(self, data):
         for (expression, class_method) in self.commands:
