@@ -173,6 +173,10 @@ I can also control playback with the following commands:
 - *`unshuffle`*: I'll unshuffle the playback.
 
 
+I can also add tracks to the playback queue
+- *`queue [Spotify-URI|Spotify-URL] ...`*: Add a single track or a space separated list of tracks to the queue
+
+
 *Please note:* When you give commands to control the playlist I'll advertise the changes on *#music channel*
 
 
