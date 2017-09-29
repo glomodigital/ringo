@@ -31,7 +31,7 @@ class RingoPlugin(Plugin):
 
         self.is_dev = plugin_config['debug']
         self.previous_volume = None
-        self.track_queue = ['spotify:track:6f49kbOuQSOsStBpyGvQfA', 'spotify:track:3bVwuZb0nYvAMn3roElQnY', 'spotify:track:0yac0FPhLRH9i9lOng3f81', 'spotify:track:6IVlHRrjTKep5SS9kbcpTa']
+        self.track_queue = []
         self.queue_playing = False
         self.slack_channel = plugin_config['slack_channel']
 
@@ -159,7 +159,7 @@ I can let you know the current song being played right now :headphones:. Just se
 
 
 I can also control playback with the following commands:
-- *`play`*: I'll resume a track or playlist, if it is paused.
+- *`play [Spotify-URI|Spotify-URL](_optional_)`*: I'll resume a track queue, track or playlist, if it is paused. Or I'll play the specific track mentioned.
 - *`pause`*: I'll pause a track or playlst, if it is playing.
 - *`skip|next`*: I'll skip the current song and play the next track in the playlist or queue.
 - *`previous`*: I'll go back to the previous track that was played.
@@ -177,7 +177,7 @@ I can also add tracks to the playback queue
 - *`queue [Spotify-URI|Spotify-URL] ...`*: Add a single track or a space separated list of tracks to the queue
 
 
-*Please note:* When you give commands to control the playlist I'll advertise the changes on *#music channel*
+*Please note:* When you give commands to control the playlist I'll advertise the changes on *<#music>* channel
 
 
 *TODO*:
