@@ -31,7 +31,7 @@ class RingoPlugin(Plugin):
 
         self.is_dev = plugin_config['debug']
         self.previous_volume = None
-        self.track_queue = []
+        self.track_queue = ["spotify:track:6b5rA9rthDbZDOQp9UbOgl", "spotify:track:1wSGgkDKaX5OXM7NPqJv4U", "spotify:track:0UBUnp3ggZivpFWGQxoSok"]
         self.queue_playing = False
         self.slack_channel = plugin_config['slack_channel']
 
@@ -78,7 +78,8 @@ class RingoPlugin(Plugin):
         self.sp_user = self.sp.me()
         self.sp.repeat('context') # Repeat is always on for now
 
-
+        # self.devices = self.sp.devices()
+        # self.device = None
 
 
 
@@ -121,12 +122,9 @@ Alternatively type `help` to see the help menu.
 
     def get_user_device(self):
         devices = self.sp.devices()
-
         for device in devices['devices']:
             if device['is_active'] == True:
-                device = device
-
-        return device
+                return device
 
     def get_username(self, user_id):
         for user in self.users:
@@ -216,16 +214,22 @@ Spotify URI: {uri}
 
         args = data['text'].split()
 
-
         if len(args) > 1:
             arg = self.normalize_uri(args[1])
-            print(arg)
             is_spotify_uri = self.check_spotify_argument(arg)
 
             if is_spotify_uri:
                 if 'track' in arg:
-                    print([arg, *self.track_queue])
-                    self.sp.start_playback(uris=[arg, *self.track_queue])
+                    # get current song
+                    current_song = self.get_current_song()
+
+                    # get index from queue
+                    current_song_index = self.track_queue.index(current_song['track_uri'])
+ 
+                    sliced_queue_after = self.track_queue[current_song_index+1:]
+                    sliced_queue_before = self.track_queue[:current_song_index+1]
+
+                    self.sp.start_playback(uris=[arg, *sliced_queue_after, *sliced_queue_before])
                 else:
                     self.sp.start_playback(context_uri=arg)
 
@@ -252,15 +256,7 @@ Spotify URI: {uri}
 
     # SKIP/NEXT
     def command_playback_skip(self, data, user):
-        # if len(self.track_queue) < 1 and self.queue_playing:
-        #     self.append_channel_output('Sorry <@{}> there were no more songs left in the queue to play. Add some more tracks or start a playlist.'.format(user))
-        #     self.queue_playing = False
-        #     print(self.queue_playing)
-        #     return
-
         self.sp.next_track()
-        # self.track_queue.pop(-1) # remove first item from track queue once played
-        # print(self.track_queue)
         current_song = self.get_current_song_uri()
         self.append_channel_output('<@{}> skipped playback to *next* song: {}'.format(user, current_song))
 
@@ -283,28 +279,35 @@ Spotify URI: {uri}
     # VOL UP|DOWN|0-100
     def command_playback_volume(self, data, user):
         args = data['text'].split()
-        arg = args[1]
-        step = 10
 
         device = self.get_user_device()
-        device_volume = device['volume_percent']
+        device_volume = device['volume_percent'] + 1
+        device_id = device['id']
 
-        if arg == 'up':
-            if device_volume >= 90:
-                self.sp.volume(100)
-                self.append_channel_output('<@{}> Playback volume is at *100%*.... Entering the *rave zone*'.format(user))
+        try:
+            arg = args[1]
+            step = 10
+
+            if arg == 'up':
+                if device_volume >= 90:
+                    self.sp.volume(100, device_id)
+                    self.append_channel_output('<@{}> Playback volume is at *100%*.... Entering the *rave zone*'.format(user))
+                else:
+                    self.sp.volume(device_volume + step, device_id)
+                    self.append_channel_output(':point_up: Let\'s pump the volume! <@{}> turned up the volume. It is now at *{}%*'.format(user, device_volume + step))
+            elif arg == 'down':
+                if device_volume <= 10:
+                    self.sp.volume(0)
+                    self.append_channel_output('Playback has now been muted by <@{}>.'.format(user))
+                else:
+                    self.sp.volume(device_volume - step, device_id)
+                    self.append_channel_output(':point_down: Let\'s quieten things down a little bit. <@{}> turned down the volume. It is now at *{}%*'.format(user, device_volume - step))
             else:
-                self.sp.volume(device_volume + step)
-                self.append_channel_output(':point_up: Let\'s pump the volume! <@{}> turned up the volume. It is now at *{}%*'.format(user, device_volume + step))
-        elif arg == 'down':
-            if device_volume <= 10:
-                self.command_playback_mute()
-            else:
-                self.sp.volume(device_volume - step)
-                self.append_channel_output(':point_down: Let\'s quieten things down a little bit. <@{}> turned down the volume. It is now at *{}%*'.format(user, device_volume - step))
-        else:
-            self.sp.volume(int(arg))
-            self.append_channel_output('<@{}> has set the playback volume to *{}%*'.format(user, arg))
+                self.sp.volume(int(arg))
+                self.append_channel_output('<@{}> has set the playback volume to *{}%*'.format(user, arg))
+
+        except:
+            self.append_channel_output('<@{}> the volume is currently at *{}%*'.format(user, device_volume))
 
     # MUTE
     def command_playback_mute(self, data, user):
@@ -326,16 +329,16 @@ Spotify URI: {uri}
     #=================
     # queue <Spotify URI>
     def command_queue(self, data, user):
-        # self.queue_playing = True
-        args = data['text'].split()
-        print(args[1:])
-        for arg in args[1:]:
-            uri = self.normalize_uri(args[1])
-            is_spotify_uri = self.check_spotify_argument(uri)
+        try:
+            args = data['text'].split()
+            for arg in args[1:]:
+                uri = self.normalize_uri(args[1])
+                is_spotify_uri = self.check_spotify_argument(uri)
 
-            if is_spotify_uri:
-                self.track_queue.append(uri)
-                print(self.track_queue)
+                if is_spotify_uri:
+                    self.track_queue.append(uri)
+        except:
+            self.append_channel_output('You need to provide a Spotify URI/URL to queue, e.g. `queue spotify:track:3VtoAIcVG8MxTefh6XH9s5`')
     # queue list
 
 
@@ -351,9 +354,9 @@ Spotify URI: {uri}
     #=================
     # Use RTM bot and slackclient
     #=================
-    def catch_all(self, data):
-        if self.is_dev:
-            print(data)
+    # def catch_all(self, data):
+        # if self.is_dev:
+            # print(data)
 
     def process_group_joined(self, data):
         self.command_help(data, None)
