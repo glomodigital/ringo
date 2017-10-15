@@ -5,7 +5,6 @@ A slackbot for interacting with Spotify in the office for democratising the play
 <img src="/screenshot/ringo_starr.jpg" width="300" alt="Ringo Starr" />
 
 
-
 ## Development
 
 ### Backgorund
