@@ -16,22 +16,13 @@ from rtmbot.core import Plugin
 
 config.set_environ_variables()
 
-# ===============
-# OAuth not working
-# ===============
-# client_id = 'e069be2e913e49e0bfacfe7363c954c4'
-# client_secret = '41ae34499956431bbf35fa91c28f8e00'
-#
-# credentials = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
-# token = credentials.get_access_token()
-
 class RingoPlugin(Plugin):
     def __init__(self, name=None, slack_client=None, plugin_config=None):
         super(RingoPlugin, self).__init__(name, slack_client, plugin_config)
 
         self.is_dev = plugin_config['debug']
         self.previous_volume = None
-        self.track_queue = ["spotify:track:6b5rA9rthDbZDOQp9UbOgl", "spotify:track:1wSGgkDKaX5OXM7NPqJv4U", "spotify:track:0UBUnp3ggZivpFWGQxoSok"]
+        self.track_queue = []
         self.queue_playing = False
         self.slack_channel = plugin_config['slack_channel']
 
@@ -62,7 +53,8 @@ class RingoPlugin(Plugin):
         # See scopes here https://developer.spotify.com/web-api/using-scopes/
         #=================
         scope = 'user-read-playback-state user-follow-modify user-follow-read playlist-read-collaborative playlist-read-private playlist-modify-public playlist-modify-private user-library-read user-library-modify user-modify-playback-state user-read-currently-playing user-read-recently-played ugc-image-upload streaming' # scope of access rights for the slack bot on spotify app
-        username = '1265281092' # user id from spotify
+        
+        username = 'glomoringo' # user id from spotify
         token = util.prompt_for_user_token(
             username,
             scope,
@@ -78,8 +70,6 @@ class RingoPlugin(Plugin):
         self.sp_user = self.sp.me()
         self.sp.repeat('context') # Repeat is always on for now
 
-        # self.devices = self.sp.devices()
-        # self.device = None
 
 
 
@@ -354,9 +344,9 @@ Spotify URI: {uri}
     #=================
     # Use RTM bot and slackclient
     #=================
-    # def catch_all(self, data):
-        # if self.is_dev:
-            # print(data)
+    def catch_all(self, data):
+        if self.is_dev:
+            print(data)
 
     def process_group_joined(self, data):
         self.command_help(data, None)
